@@ -24,6 +24,104 @@
 sealed class Twofold<S, E> {
   const Twofold();
 
+  /// Creates a successful [Twofold] containing [value].
+  ///
+  /// Use this when you want to explicitly return a success result.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = Twofold.success(42);
+  /// ```
+  factory Twofold.success(S value) = Success<S, E>;
+
+  /// Creates an error [Twofold] containing [error].
+  ///
+  /// Use this when an operation fails and you want to return
+  /// a meaningful error value.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = Twofold.error('Invalid input');
+  /// ```
+  factory Twofold.error(E error) = Error<S, E>;
+
+  /// Creates a [Twofold] based on a boolean [condition].
+  ///
+  /// - If [condition] is `true`, [success] is executed.
+  /// - If [condition] is `false`, [error] is executed.
+  ///
+  /// This is useful for validations and guards.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = Twofold.fromCondition(
+  ///   age >= 18,
+  ///   success: () => age,
+  ///   error: () => 'User must be 18+',
+  /// );
+  /// ```
+  static Twofold<S, E> fromCondition<S, E>(
+    bool condition, {
+    required S Function() success,
+    required E Function() error,
+  }) {
+    return condition ? Success<S, E>(success()) : Error<S, E>(error());
+  }
+
+  /// Executes [action] and captures any thrown exception as an [Error].
+  ///
+  /// This prevents exceptions from escaping and converts them
+  /// into a typed error value.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = Twofold.tryCatch(
+  ///   () => int.parse(input),
+  ///   onError: (e, _) => 'Invalid number',
+  /// );
+  /// ```
+  static Twofold<S, E> tryCatch<S, E>(
+    S Function() action, {
+    required E Function(Object error, StackTrace stackTrace) onError,
+  }) {
+    try {
+      return Success<S, E>(action());
+    } catch (e, st) {
+      return Error<S, E>(onError(e, st));
+    }
+  }
+
+  /// Returns the success value if present, otherwise [defaultValue].
+  ///
+  /// This is a safe way to extract a value when a fallback
+  /// is acceptable.
+  ///
+  /// Example:
+  /// ```dart
+  /// final count = result.getOrElse(0);
+  /// ```
+  S getOrElse(S defaultValue) {
+    return switch (this) {
+      Success(:final value) => value,
+      Error() => defaultValue,
+    };
+  }
+
+  /// Returns the success value if present, otherwise computes a fallback.
+  ///
+  /// Use this when the fallback value is expensive to compute.
+  ///
+  /// Example:
+  /// ```dart
+  /// final user = result.getOrElseGet(() => fetchGuestUser());
+  /// ```
+  S getOrElseGet(S Function() fallback) {
+    return switch (this) {
+      Success(:final value) => value,
+      Error() => fallback(),
+    };
+  }
+
   /// Returns `true` if this is a [Success].
   ///
   /// Example:
