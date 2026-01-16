@@ -95,12 +95,11 @@ sealed class Twofold<S, E> {
 
   /// Returns the success value if present, otherwise [defaultValue].
   ///
-  /// This is a safe way to extract a value when a fallback
-  /// is acceptable.
-  ///
   /// Example:
   /// ```dart
-  /// final count = result.getOrElse(0);
+  /// final result = Twofold.error('Failed');
+  ///
+  /// final value = result.getOrElse(0); // 0
   /// ```
   S getOrElse(S defaultValue) {
     return switch (this) {
@@ -111,11 +110,13 @@ sealed class Twofold<S, E> {
 
   /// Returns the success value if present, otherwise computes a fallback.
   ///
-  /// Use this when the fallback value is expensive to compute.
+  /// Use this when the fallback is expensive to compute.
   ///
   /// Example:
   /// ```dart
-  /// final user = result.getOrElseGet(() => fetchGuestUser());
+  /// final result = Twofold.error('No cache');
+  ///
+  /// final value = result.getOrElseGet(() => fetchFromServer());
   /// ```
   S getOrElseGet(S Function() fallback) {
     return switch (this) {
@@ -126,8 +127,13 @@ sealed class Twofold<S, E> {
 
   /// Returns `true` if this is a [Success].
   ///
+  /// This is useful for simple branching when you do not
+  /// need to extract the value.
+  ///
   /// Example:
   /// ```dart
+  /// final result = Twofold.success(10);
+  ///
   /// if (result.isSuccess) {
   ///   print('Operation succeeded');
   /// }
@@ -138,6 +144,8 @@ sealed class Twofold<S, E> {
   ///
   /// Example:
   /// ```dart
+  /// final result = Twofold.error('Invalid input');
+  ///
   /// if (result.isError) {
   ///   print('Operation failed');
   /// }
@@ -146,13 +154,15 @@ sealed class Twofold<S, E> {
 
   /// Returns the success value if present, otherwise `null`.
   ///
-  /// This is a **safe** accessor and will never throw.
+  /// This is a safe alternative to [successUnsafe].
   ///
   /// Example:
   /// ```dart
+  /// final result = Twofold.success(42);
+  ///
   /// final value = result.successOrNull;
   /// if (value != null) {
-  ///   print('Success: $value');
+  ///   print('Value: $value');
   /// }
   /// ```
   S? get successOrNull {
@@ -164,10 +174,12 @@ sealed class Twofold<S, E> {
 
   /// Returns the error value if present, otherwise `null`.
   ///
-  /// This is a **safe** accessor and will never throw.
+  /// This is a safe alternative to [errorUnsafe].
   ///
   /// Example:
   /// ```dart
+  /// final result = Twofold.error('Network error');
+  ///
   /// final error = result.errorOrNull;
   /// if (error != null) {
   ///   print('Error: $error');
@@ -182,14 +194,15 @@ sealed class Twofold<S, E> {
 
   /// Returns the success value if this is a [Success].
   ///
-  /// Throws a [StateError] if this is an [Error].
+  /// ⚠️ Throws a [StateError] if this is an [Error].
   ///
   /// Use this only when you are **logically certain**
-  /// that the value is a success.
+  /// the value is a success.
   ///
   /// Example:
   /// ```dart
-  /// final value = result.successUnsafe;
+  /// final result = Twofold.success(10);
+  /// final value = result.successUnsafe; // 10
   /// ```
   S get successUnsafe {
     return switch (this) {
@@ -201,14 +214,12 @@ sealed class Twofold<S, E> {
 
   /// Returns the error value if this is an [Error].
   ///
-  /// Throws a [StateError] if this is a [Success].
-  ///
-  /// Use this only when you are **logically certain**
-  /// that the value is an error.
+  /// ⚠️ Throws a [StateError] if this is a [Success].
   ///
   /// Example:
   /// ```dart
-  /// final error = result.errorUnsafe;
+  /// final result = Twofold.error('Invalid token');
+  /// final error = result.errorUnsafe; // 'Invalid token'
   /// ```
   E get errorUnsafe {
     return switch (this) {
@@ -398,6 +409,22 @@ final class Success<S, E> extends Twofold<S, E> {
       identical(this, other) || other is Success<S, E> && other.value == value;
 
   /// Returns a hash code based on the success value.
+  ///
+  /// This ensures that two [Success] instances containing equal
+  /// values produce the same hash code.
+  ///
+  /// This is required to maintain consistency with [operator ==]
+  /// when using [Twofold] in hashed collections such as
+  /// [Set] or [Map].
+  ///
+  /// Example:
+  /// ```dart
+  /// final a = Success<int, String>(10);
+  /// final b = Success<int, String>(10);
+  ///
+  /// print(a == b); // true
+  /// print(a.hashCode == b.hashCode); // true
+  /// ```
   @override
   int get hashCode => Object.hash(runtimeType, value);
 }
@@ -436,6 +463,22 @@ final class Error<S, E> extends Twofold<S, E> {
       identical(this, other) || other is Error<S, E> && other.error == error;
 
   /// Returns a hash code based on the error value.
+  ///
+  /// This ensures that two [Error] instances containing equal
+  /// error values produce the same hash code.
+  ///
+  /// This is required to maintain consistency with [operator ==]
+  /// when using [Twofold] in hashed collections such as
+  /// [Set] or [Map].
+  ///
+  /// Example:
+  /// ```dart
+  /// final a = Error<int, String>('oops');
+  /// final b = Error<int, String>('oops');
+  ///
+  /// print(a == b); // true
+  /// print(a.hashCode == b.hashCode); // true
+  /// ```
   @override
   int get hashCode => Object.hash(runtimeType, error);
 }
