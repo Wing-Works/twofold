@@ -179,20 +179,40 @@ final result = await TwofoldFuture.tryCatch(
 
 ## Testing Helpers
 
-Twofold includes simple, framework-agnostic helpers for testing.
+Twofold includes **framework-agnostic testing helpers** to make assertions
+clear and intention-revealing.
+
+These helpers are designed to:
+- avoid boilerplate `switch` statements
+- provide better failure messages
+- work with any Dart test framework
+
+### expectSuccess
 
 ```dart
 expectSuccess(result, (value) {
   expect(value, 42);
 });
+```
 
+Fails the test if the result is an `Error`.
+
+---
+
+### expectError
+
+```dart
 expectError(result, (error) {
   expect(error, 'Invalid input');
 });
 ```
 
-These helpers work with `package:test`, `flutter_test`,
-or any assertion-based testing framework.
+Fails the test if the result is a `Success`.
+
+These helpers work with:
+- `package:test`
+- `flutter_test`
+- any assertion-based testing setup
 
 ---
 
