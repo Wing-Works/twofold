@@ -24,6 +24,21 @@ exceptions or nullable values.
 
 ---
 
+## Design Principles
+
+Twofold is intentionally small, strict, and predictable.
+
+The project follows clear design and API stability rules to ensure:
+- long-term maintainability
+- strong typing
+- readable application code
+- safe evolution toward v1.0
+
+If you plan to contribute or propose new features, please read  
+[CONTRIBUTING.md](./CONTRIBUTING.md) before opening an issue or PR.
+
+---
+
 ## Installation
 
 ```yaml
