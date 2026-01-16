@@ -47,10 +47,12 @@ sealed class Twofold<S, E> {
 
   /// Creates a [Twofold] based on a boolean [condition].
   ///
+  /// Only the matching branch is evaluated:
   /// - If [condition] is `true`, [success] is executed.
   /// - If [condition] is `false`, [error] is executed.
   ///
-  /// This is useful for validations and guards.
+  /// This makes the method safe for expensive computations
+  /// and validation logic.
   ///
   /// Example:
   /// ```dart
@@ -336,6 +338,28 @@ sealed class Twofold<S, E> {
     return switch (this) {
       Success(:final value) => transform(value),
       Error(:final error) => Error<T, E>(error),
+    };
+  }
+
+  /// Swaps the success and error sides of this [Twofold].
+  ///
+  /// - A [Success] becomes an [Error] with the same value.
+  /// - An [Error] becomes a [Success] with the same value.
+  ///
+  /// This is useful when you want to reverse the meaning
+  /// of a result for alternate flows or validations.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = Twofold.success(10);
+  /// final swapped = result.swap();
+  ///
+  /// // swapped is Error(10)
+  /// ```
+  Twofold<E, S> swap() {
+    return switch (this) {
+      Success(:final value) => Error<E, S>(value),
+      Error(:final error) => Success<E, S>(error),
     };
   }
 }

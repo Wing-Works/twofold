@@ -135,4 +135,15 @@ extension TwofoldFutureX<S, E> on Future<Twofold<S, E>> {
     final result = await this;
     return result.getOrElseGet(fallback);
   }
+
+  /// Swaps the success and error sides asynchronously.
+  ///
+  /// Example:
+  /// ```dart
+  /// final swapped = await fetchResult().swap();
+  /// ```
+  Future<Twofold<E, S>> swap() async {
+    final result = await this;
+    return result.swap();
+  }
 }
