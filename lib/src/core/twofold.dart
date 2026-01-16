@@ -399,7 +399,7 @@ final class Success<S, E> extends Twofold<S, E> {
 
   /// Returns a hash code based on the success value.
   @override
-  int get hashCode => value.hashCode;
+  int get hashCode => Object.hash(runtimeType, value);
 }
 
 /// Represents a failed outcome containing an error of type [E].
@@ -437,5 +437,5 @@ final class Error<S, E> extends Twofold<S, E> {
 
   /// Returns a hash code based on the error value.
   @override
-  int get hashCode => error.hashCode;
+  int get hashCode => Object.hash(runtimeType, error);
 }

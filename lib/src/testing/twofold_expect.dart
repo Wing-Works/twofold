@@ -1,9 +1,10 @@
-import 'package:test/test.dart';
-
 import '../core/twofold.dart';
 
 /// Asserts that the [result] is a [Success] and provides
-/// the success value for further expectations.
+/// the success value for further verification.
+///
+/// This helper is framework-agnostic and works with
+/// `package:test`, `flutter_test`, and other test tools.
 ///
 /// Example:
 /// ```dart
@@ -19,14 +20,14 @@ void expectSuccess<S, E>(
     case Success(:final value):
       verify(value);
     case Error(:final error):
-      throw TestFailure(
+      throw AssertionError(
         'Expected Success but got Error($error)',
       );
   }
 }
 
 /// Asserts that the [result] is an [Error] and provides
-/// the error value for further expectations.
+/// the error value for further verification.
 ///
 /// Example:
 /// ```dart
@@ -42,7 +43,7 @@ void expectError<S, E>(
     case Error(:final error):
       verify(error);
     case Success(:final value):
-      throw TestFailure(
+      throw AssertionError(
         'Expected Error but got Success($value)',
       );
   }
