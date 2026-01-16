@@ -23,6 +23,100 @@
 /// ```
 sealed class Twofold<S, E> {
   const Twofold();
+
+  /// Returns `true` if this is a [Success].
+  ///
+  /// Example:
+  /// ```dart
+  /// if (result.isSuccess) {
+  ///   print('Operation succeeded');
+  /// }
+  /// ```
+  bool get isSuccess => this is Success<S, E>;
+
+  /// Returns `true` if this is an [Error].
+  ///
+  /// Example:
+  /// ```dart
+  /// if (result.isError) {
+  ///   print('Operation failed');
+  /// }
+  /// ```
+  bool get isError => this is Error<S, E>;
+
+  /// Returns the success value if present, otherwise `null`.
+  ///
+  /// This is a **safe** accessor and will never throw.
+  ///
+  /// Example:
+  /// ```dart
+  /// final value = result.successOrNull;
+  /// if (value != null) {
+  ///   print('Success: $value');
+  /// }
+  /// ```
+  S? get successOrNull {
+    return switch (this) {
+      Success(:final value) => value,
+      _ => null,
+    };
+  }
+
+  /// Returns the error value if present, otherwise `null`.
+  ///
+  /// This is a **safe** accessor and will never throw.
+  ///
+  /// Example:
+  /// ```dart
+  /// final error = result.errorOrNull;
+  /// if (error != null) {
+  ///   print('Error: $error');
+  /// }
+  /// ```
+  E? get errorOrNull {
+    return switch (this) {
+      Error(:final error) => error,
+      _ => null,
+    };
+  }
+
+  /// Returns the success value if this is a [Success].
+  ///
+  /// Throws a [StateError] if this is an [Error].
+  ///
+  /// Use this only when you are **logically certain**
+  /// that the value is a success.
+  ///
+  /// Example:
+  /// ```dart
+  /// final value = result.successUnsafe;
+  /// ```
+  S get successUnsafe {
+    return switch (this) {
+      Success(:final value) => value,
+      Error() =>
+        throw StateError('Tried to access success value from an Error'),
+    };
+  }
+
+  /// Returns the error value if this is an [Error].
+  ///
+  /// Throws a [StateError] if this is a [Success].
+  ///
+  /// Use this only when you are **logically certain**
+  /// that the value is an error.
+  ///
+  /// Example:
+  /// ```dart
+  /// final error = result.errorUnsafe;
+  /// ```
+  E get errorUnsafe {
+    return switch (this) {
+      Error(:final error) => error,
+      Success() =>
+        throw StateError('Tried to access error value from a Success'),
+    };
+  }
 }
 
 /// Represents a successful outcome containing a value of type [S].
