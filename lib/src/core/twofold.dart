@@ -117,6 +117,54 @@ sealed class Twofold<S, E> {
         throw StateError('Tried to access error value from a Success'),
     };
   }
+
+  /// Handles the value contained in this [Twofold].
+  ///
+  /// This method is intentionally flexible and can be used in two ways:
+  ///
+  /// **1. For side effects**
+  /// (handle success or error without returning a value)
+  ///
+  /// **2. For value transformation**
+  /// (convert the result into another value, similar to a traditional `fold`)
+  ///
+  /// Both callbacks are optional:
+  /// - If a callback is not provided, it will be skipped.
+  /// - If neither callback is provided, this method returns `null`.
+  ///
+  /// ---
+  ///
+  /// ### Example: Side effects
+  /// ```dart
+  /// result.when(
+  ///   onSuccess: (value) => print('Success: $value'),
+  ///   onError: (err) => print('Error: $err'),
+  /// );
+  /// ```
+  ///
+  /// ### Example: Returning a value
+  /// ```dart
+  /// final message = result.when(
+  ///   onSuccess: (value) => 'Got $value',
+  ///   onError: (err) => 'Failed: $err',
+  /// );
+  /// ```
+  ///
+  /// ### Example: Partial handling
+  /// ```dart
+  /// result.when(
+  ///   onError: (err) => showError(err),
+  /// );
+  /// ```
+  T? when<T>({
+    T Function(S success)? onSuccess,
+    T Function(E error)? onError,
+  }) {
+    return switch (this) {
+      Success(:final value) => onSuccess != null ? onSuccess(value) : null,
+      Error(:final error) => onError != null ? onError(error) : null,
+    };
+  }
 }
 
 /// Represents a successful outcome containing a value of type [S].
