@@ -378,13 +378,26 @@ final class Success<S, E> extends Twofold<S, E> {
   /// The successful value.
   final S value;
 
+  /// Returns a readable string representation.
+  ///
+  /// Example:
+  /// ```dart
+  /// print(Success(10)); // Success(10)
+  /// ```
   @override
   String toString() => 'Success($value)';
 
+  /// Compares two [Success] instances by their values.
+  ///
+  /// Example:
+  /// ```dart
+  /// expect(Success(1) == Success(1), true);
+  /// ```
   @override
   bool operator ==(Object other) =>
       identical(this, other) || other is Success<S, E> && other.value == value;
 
+  /// Returns a hash code based on the success value.
   @override
   int get hashCode => value.hashCode;
 }
@@ -403,13 +416,26 @@ final class Error<S, E> extends Twofold<S, E> {
   /// The error value.
   final E error;
 
+  /// Returns a readable string representation.
+  ///
+  /// Example:
+  /// ```dart
+  /// print(Error('oops')); // Error(oops)
+  /// ```
   @override
   String toString() => 'Error($error)';
 
+  /// Compares two [Error] instances by their error values.
+  ///
+  /// Example:
+  /// ```dart
+  /// expect(Error('x') == Error('x'), true);
+  /// ```
   @override
   bool operator ==(Object other) =>
       identical(this, other) || other is Error<S, E> && other.error == error;
 
+  /// Returns a hash code based on the error value.
   @override
   int get hashCode => error.hashCode;
 }
