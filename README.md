@@ -1,7 +1,7 @@
 # Twofold
 
-**Twofold** is a small utility for representing values that can have
-**one of two outcomes** — commonly *failure* or *success*.
+**Twofold** is a small, explicit utility for representing values that can have  
+**one of two outcomes** — a *success* or an *error*.
 
 It is designed to be:
 - Simple
@@ -9,7 +9,7 @@ It is designed to be:
 - Easy to read
 - Friendly for real-world Dart and Flutter apps
 
-No special programming style or background is required.
+No functional-programming background is required.
 
 ---
 
@@ -19,8 +19,28 @@ In many applications, operations can:
 - succeed with a value
 - fail with a reason
 
-`Twofold<L, R>` lets you model this clearly without relying on
-exceptions or nullable values.
+`Twofold<S, E>` lets you model this clearly without relying on
+exceptions, nullable values, or implicit control flow.
+
+Twofold focuses on:
+- clear intent
+- predictable APIs
+- readable application code
+
+---
+
+## Design Principles
+
+Twofold is intentionally small, strict, and predictable.
+
+The project follows clear design and API stability rules to ensure:
+- long-term maintainability
+- strong typing
+- readable application code
+- safe evolution toward v1.0
+
+If you plan to contribute or propose new features, please read  
+[CONTRIBUTING.md](./CONTRIBUTING.md) before opening an issue or PR.
 
 ---
 
@@ -28,7 +48,7 @@ exceptions or nullable values.
 
 ```yaml
 dependencies:
-  twofold: ^0.1.0
+  twofold: ^0.2.0
 ```
 
 ```dart
@@ -37,13 +57,13 @@ import 'package:twofold/twofold.dart';
 
 ---
 
-## Basic usage
+## Basic Usage
 
 ### Creating values
 
 ```dart
-final success = right<String, int>(42);
-final failure = left<String, int>('Something went wrong');
+final success = Twofold.success(42);
+final error = Twofold.error('Something went wrong');
 ```
 
 ---
@@ -51,13 +71,11 @@ final failure = left<String, int>('Something went wrong');
 ### Checking state
 
 ```dart
-if (result.isRight) {
-print('Operation succeeded');
+if (result.isSuccess) {
+  print('Operation succeeded');
 }
-```
 
-```dart
-if (result.isLeft) {
+if (result.isError) {
   print('Operation failed');
 }
 ```
@@ -67,9 +85,9 @@ if (result.isLeft) {
 ### Handling both cases (recommended)
 
 ```dart
-final message = result.fold(
-  (error) => 'Failed: $error',
-  (value) => 'Success: $value',
+final message = result.when(
+  onSuccess: (value) => 'Success: $value',
+  onError: (error) => 'Failed: $error',
 );
 ```
 
@@ -79,8 +97,8 @@ final message = result.fold(
 
 ```dart
 result.when(
-  (error) => log(error),
-  (value) => save(value),
+  onSuccess: (value) => save(value),
+  onError: (error) => log(error),
 );
 ```
 
@@ -88,36 +106,36 @@ result.when(
 
 ## Transforming values
 
-### map
+### mapSuccess
 
 ```dart
-final doubled = right<String, int>(2)
-    .map((v) => v * 2);
+final doubled = Twofold.success(2)
+    .mapSuccess((v) => v * 2);
 ```
 
 ---
 
-### mapLeft
+### mapError
 
 ```dart
-final formattedError = left<int, String>(404)
-    .mapLeft((code) => 'Error $code');
+final formattedError = Twofold.error(404)
+    .mapError((code) => 'Error $code');
 ```
 
 ---
 
-### flatMap (chaining)
+### flatMapSuccess (chaining)
 
 ```dart
-Twofold<String, int> parse(String value) {
+Twofold<int, String> parse(String value) {
   final parsed = int.tryParse(value);
   return parsed != null
-      ? right(parsed)
-      : left('Invalid number');
+      ? Twofold.success(parsed)
+      : Twofold.error('Invalid number');
 }
 
-final result = right<String, String>('10')
-    .flatMap(parse);
+final result = Twofold.success('10')
+    .flatMapSuccess(parse);
 ```
 
 ---
@@ -134,29 +152,82 @@ final value = result.getOrElseGet(() => expensiveFallback());
 
 ---
 
-## Utility helpers
+## Async Usage
+
+Twofold provides extensions for `Future<Twofold>` to enable fluent async flows.
 
 ```dart
-print(result.toStringValue());
+fetchUser()
+  .mapSuccess((u) => u.name)
+  .flatMapSuccess(fetchProfile)
+  .when(
+    onSuccess: print,
+    onError: showError,
+  );
 ```
 
-```dart
-final isSame = a.isEqualTo(b);
-```
+Creating async results safely:
 
 ```dart
-final hash = result.hashValue;
+final result = await TwofoldFuture.tryCatch(
+  () async => fetchData(),
+  onError: (e, _) => e.toString(),
+);
 ```
 
 ---
 
-## Important note
+## Testing Helpers
 
-A `Twofold` should contain **exactly one** value:
-- either a left value
-- or a right value
+Twofold includes **framework-agnostic testing helpers** to make assertions
+clear and intention-revealing.
 
-Creating a value where both are `null` is considered invalid
-and will throw at runtime when accessed.
+These helpers are designed to:
+- avoid boilerplate `switch` statements
+- provide better failure messages
+- work with any Dart test framework
 
-This will be enforced more strictly in future versions.
+### expectSuccess
+
+```dart
+expectSuccess(result, (value) {
+  expect(value, 42);
+});
+```
+
+Fails the test if the result is an `Error`.
+
+---
+
+### expectError
+
+```dart
+expectError(result, (error) {
+  expect(error, 'Invalid input');
+});
+```
+
+Fails the test if the result is a `Success`.
+
+These helpers work with:
+- `package:test`
+- `flutter_test`
+- any assertion-based testing setup
+
+---
+
+## Important Note
+
+A `Twofold` always represents **exactly one state**:
+- a `Success` containing a value
+- or an `Error` containing an error
+
+Invalid or ambiguous states are not possible by design.
+
+---
+
+## Feedback & Contributions
+
+- GitHub: https://github.com/wing-works/twofold
+- Issues and feature discussions are welcome
+- Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before contributing
