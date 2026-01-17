@@ -62,8 +62,8 @@ import 'package:twofold/twofold.dart';
 ### Creating values
 
 ```dart
-final success = Twofold.success(42);
-final error = Twofold.error('Something went wrong');
+final Twofold<int, String> success = Twofold.success(42);
+final Twofold<int, String> error = Twofold.error('Something went wrong');
 ```
 
 ---
@@ -154,7 +154,8 @@ final value = result.getOrElseGet(() => expensiveFallback());
 
 ## Async Usage
 
-Twofold provides extensions for `Future<Twofold>` to enable fluent async flows.
+Twofold provides extensions and helpers for `Future<Twofold>` to enable
+clear and fluent async flows without deeply nested `try/catch` blocks.
 
 ```dart
 fetchUser()
@@ -182,37 +183,38 @@ final result = await TwofoldFuture.tryCatch(
 Twofold includes **framework-agnostic testing helpers** to make assertions
 clear and intention-revealing.
 
-These helpers are designed to:
-- avoid boilerplate `switch` statements
-- provide better failure messages
-- work with any Dart test framework
-
-### expectSuccess
-
 ```dart
 expectSuccess(result, (value) {
   expect(value, 42);
 });
-```
 
-Fails the test if the result is an `Error`.
-
----
-
-### expectError
-
-```dart
 expectError(result, (error) {
   expect(error, 'Invalid input');
 });
 ```
 
-Fails the test if the result is a `Success`.
-
 These helpers work with:
 - `package:test`
 - `flutter_test`
 - any assertion-based testing setup
+
+---
+
+## Examples (Recommended)
+
+This package includes a **dedicated `example/` project** with
+well-documented, runnable code covering **every API**.
+
+The example project demonstrates:
+- core construction and inspection
+- `when` handling patterns
+- transformations and chaining
+- async factories vs async transforms
+- fallback utilities
+- testing helpers with real tests
+
+📂 See: **[`example/`](./example)**  
+📄 Start here: **[`example/README.md`](./example/README.md)**
 
 ---
 

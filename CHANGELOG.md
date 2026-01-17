@@ -7,7 +7,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.2.0] - 2026-01-17
+## [0.2.0] - 2026-01-18
 
 ### Added
 - New sealed `Twofold<S, E>` core type with explicit `Success` and `Error` states
