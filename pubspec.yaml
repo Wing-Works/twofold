@@ -1,6 +1,6 @@
 name: twofold
 description: A small utility for representing values with two possible outcomes, commonly failure or success.
-version: 0.1.0
+version: 0.2.0
 homepage: https://github.com/Wing-Works/twofold
 repository: https://github.com/Wing-Works/twofold
 
