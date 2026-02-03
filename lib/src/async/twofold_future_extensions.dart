@@ -1,9 +1,11 @@
-import '../core/twofold.dart';
+import 'package:meta/meta.dart';
+import 'package:twofold/src/core/twofold.dart';
 
 /// Async extensions for working with `Future<Twofold>`.
 ///
 /// These extensions mirror the synchronous [Twofold] APIs
 /// and allow fluent async chaining without repetitive `await`.
+@internal
 extension TwofoldFutureX<S, E> on Future<Twofold<S, E>> {
   /// Transforms the success value asynchronously.
   ///

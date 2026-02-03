@@ -7,6 +7,24 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.0]
+
+### Added
+
+- `Twofold.fromCondition` factory for creating a `Twofold` from a boolean condition.
+- `Twofold.tryCatch` factory for safely executing code that may throw an exception.
+
+### Changed
+
+- The `when` method now supports partial handling, returning `null` if a corresponding handler is not provided.
+
+### Improved
+
+- Enhanced equality and `hashCode` implementations for `Success` and `Error` classes.
+- Marked `Success` and `Error` classes as `final` to enforce immutability.
+
+---
+
 ## [0.2.0] - 2026-01-18
 
 ### Added
