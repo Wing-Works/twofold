@@ -1,5 +1,8 @@
 # Twofold
 
+![version](https://img.shields.io/badge/version-0.3.0-blue)
+
+
 **Twofold** is a small, explicit utility for representing values that can have  
 **one of two outcomes** — a *success* or an *error*.
 

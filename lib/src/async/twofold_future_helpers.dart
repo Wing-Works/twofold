@@ -1,6 +1,8 @@
-import '../core/twofold.dart';
+import 'package:meta/meta.dart';
+import 'package:twofold/src/core/twofold.dart';
 
 /// Async factory helpers for creating [Twofold] values.
+@internal
 abstract final class TwofoldFuture {
   /// Creates a [Twofold] asynchronously based on a condition.
   ///
