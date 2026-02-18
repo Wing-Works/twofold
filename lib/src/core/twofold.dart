@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 /// A type that represents either a successful value [S]
 /// or an error value [E].
 ///
@@ -9,6 +11,7 @@
 /// - no invalid state
 /// - clear intent
 /// - strong typing
+/// - exhaustive pattern matching
 ///
 /// Example:
 /// ```dart
@@ -20,6 +23,15 @@
 ///   case Error(:final error):
 ///     print('Error: $error');
 /// }
+/// ```
+///
+/// ## Working with Nullable Types
+///
+/// `Twofold` supports nullable success and error types:
+/// ```dart
+/// final result = Success<int?, String>(null);
+/// print(result.isSuccess); // true
+/// print(result.successOrNull); // null
 /// ```
 sealed class Twofold<S, E> {
   const Twofold();
@@ -63,10 +75,10 @@ sealed class Twofold<S, E> {
   /// );
   /// ```
   static Twofold<S, E> fromCondition<S, E>(
-    bool condition, {
-    required S Function() success,
-    required E Function() error,
-  }) {
+      bool condition, {
+        required S Function() success,
+        required E Function() error,
+      }) {
     return condition ? Success<S, E>(success()) : Error<S, E>(error());
   }
 
@@ -75,17 +87,21 @@ sealed class Twofold<S, E> {
   /// This prevents exceptions from escaping and converts them
   /// into a typed error value.
   ///
+  /// ⚠️ **Security Note**: In production environments, ensure that error
+  /// handlers properly sanitize stack traces before logging or exposing them
+  /// to end users, as they may contain sensitive implementation details.
+  ///
   /// Example:
   /// ```dart
   /// final result = Twofold.tryCatch(
   ///   () => int.parse(input),
-  ///   onError: (e, _) => 'Invalid number',
+  ///   onError: (e, _) => 'Invalid number: ${e.runtimeType}',
   /// );
   /// ```
   static Twofold<S, E> tryCatch<S, E>(
-    S Function() action, {
-    required E Function(Object error, StackTrace stackTrace) onError,
-  }) {
+      S Function() action, {
+        required E Function(Object error, StackTrace stackTrace) onError,
+      }) {
     try {
       return Success<S, E>(action());
     } catch (e, st) {
@@ -156,6 +172,9 @@ sealed class Twofold<S, E> {
   ///
   /// This is a safe alternative to [successUnsafe].
   ///
+  /// Note: If the success type [S] is nullable, this will return `null`
+  /// for both Error cases and Success cases containing `null`.
+  ///
   /// Example:
   /// ```dart
   /// final result = Twofold.success(42);
@@ -175,6 +194,9 @@ sealed class Twofold<S, E> {
   /// Returns the error value if present, otherwise `null`.
   ///
   /// This is a safe alternative to [errorUnsafe].
+  ///
+  /// Note: If the error type [E] is nullable, this will return `null`
+  /// for both Success cases and Error cases containing `null`.
   ///
   /// Example:
   /// ```dart
@@ -197,7 +219,9 @@ sealed class Twofold<S, E> {
   /// ⚠️ Throws a [StateError] if this is an [Error].
   ///
   /// Use this only when you are **logically certain**
-  /// the value is a success.
+  /// the value is a success (e.g., after checking [isSuccess]).
+  ///
+  /// Consider using [successOrNull] or [getOrElse] for safer alternatives.
   ///
   /// Example:
   /// ```dart
@@ -208,13 +232,15 @@ sealed class Twofold<S, E> {
     return switch (this) {
       Success(:final value) => value,
       Error() =>
-        throw StateError('Tried to access success value from an Error'),
+      throw StateError('Attempted to unwrap success value from an Error'),
     };
   }
 
   /// Returns the error value if this is an [Error].
   ///
   /// ⚠️ Throws a [StateError] if this is a [Success].
+  ///
+  /// Consider using [errorOrNull] for a safer alternative.
   ///
   /// Example:
   /// ```dart
@@ -225,7 +251,7 @@ sealed class Twofold<S, E> {
     return switch (this) {
       Error(:final error) => error,
       Success() =>
-        throw StateError('Tried to access error value from a Success'),
+      throw StateError('Attempted to unwrap error value from a Success'),
     };
   }
 
@@ -242,6 +268,12 @@ sealed class Twofold<S, E> {
   /// Both callbacks are optional:
   /// - If a callback is not provided, it will be skipped.
   /// - If neither callback is provided, this method returns `null`.
+  /// - If only one callback is provided and the state doesn't match, returns `null`.
+  ///
+  /// **Note on partial handling**: When providing only one callback, be aware
+  /// that the method will return `null` if that callback doesn't match the
+  /// current state. For exhaustive handling, provide both callbacks or use
+  /// pattern matching instead.
   ///
   /// ---
   ///
@@ -261,11 +293,11 @@ sealed class Twofold<S, E> {
   /// );
   /// ```
   ///
-  /// ### Example: Partial handling
+  /// ### Example: Partial handling (returns null if no match)
   /// ```dart
   /// result.when(
   ///   onError: (err) => showError(err),
-  /// );
+  /// ); // Returns null if result is Success
   /// ```
   T? when<T>({
     T Function(S success)? onSuccess,
@@ -344,8 +376,8 @@ sealed class Twofold<S, E> {
   /// // Result: Success(10)
   /// ```
   Twofold<T, E> flatMapSuccess<T>(
-    Twofold<T, E> Function(S value) transform,
-  ) {
+      Twofold<T, E> Function(S value) transform,
+      ) {
     return switch (this) {
       Success(:final value) => transform(value),
       Error(:final error) => Error<T, E>(error),
@@ -382,6 +414,7 @@ sealed class Twofold<S, E> {
 /// final result = Success<int, String>(42);
 /// print(result.value); // 42
 /// ```
+@immutable
 final class Success<S, E> extends Twofold<S, E> {
   /// Creates a successful [Twofold].
   const Success(this.value);
@@ -436,6 +469,7 @@ final class Success<S, E> extends Twofold<S, E> {
 /// final result = Error<int, String>('Invalid input');
 /// print(result.error); // Invalid input
 /// ```
+@immutable
 final class Error<S, E> extends Twofold<S, E> {
   /// Creates a failed [Twofold].
   const Error(this.error);

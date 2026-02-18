@@ -1,4 +1,5 @@
-import '../core/twofold.dart';
+import 'package:meta/meta.dart';
+import 'package:twofold/src/core/twofold.dart';
 
 /// Asserts that the [result] is a [Success] and provides
 /// the success value for further verification.
@@ -12,6 +13,7 @@ import '../core/twofold.dart';
 ///   expect(value, 42);
 /// });
 /// ```
+@isTest
 void expectSuccess<S, E>(
   Twofold<S, E> result,
   void Function(S value) verify,

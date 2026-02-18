@@ -1,188 +1,163 @@
 # Twofold
 
-**Twofold** is a small, explicit utility for representing values that can have  
-**one of two outcomes** — a *success* or an *error*.
+![version](https://img.shields.io/badge/version-0.2.1-blue)
+![pub.dev](https://img.shields.io/pub/v/twofold)
+![license](https://img.shields.io/badge/license-MIT-green)
 
-It is designed to be:
-- Simple
-- Explicit
-- Easy to read
-- Friendly for real-world Dart and Flutter apps
+**Twofold** is a lightweight Dart and Flutter package for representing operations  
+that either **succeed with a value** or **fail with an error** — no exceptions, no nulls.
+```dart
+final result = await TwofoldFuture.tryCatch(
+  () async => fetchUser(id),
+  onError: (e, _) => 'Failed to load user: $e',
+);
 
-No functional-programming background is required.
+result.when(
+  onSuccess: (user) => showProfile(user),
+  onError: (msg)  => showError(msg),
+);
+```
 
 ---
 
 ## Why Twofold?
 
-In many applications, operations can:
-- succeed with a value
-- fail with a reason
+Operations in real apps fail. Twofold makes that explicit in your type system:
 
-`Twofold<S, E>` lets you model this clearly without relying on
-exceptions, nullable values, or implicit control flow.
-
-Twofold focuses on:
-- clear intent
-- predictable APIs
-- readable application code
+- No more silent nulls or uncaught exceptions
+- The compiler reminds you to handle both outcomes
+- Your code reads like plain English
 
 ---
 
-## Design Principles
+## Coming from dartz or fpdart?
 
-Twofold is intentionally small, strict, and predictable.
+If you've used packages like **dartz** or **fpdart** and found them heavy or  
+hard to explain to your team, Twofold is designed for you.
 
-The project follows clear design and API stability rules to ensure:
-- long-term maintainability
-- strong typing
-- readable application code
-- safe evolution toward v1.0
+Twofold covers the most common use case — **success/error branching** — with  
+a plain-Dart API that requires zero functional-programming background.
 
-If you plan to contribute or propose new features, please read  
-[CONTRIBUTING.md](./CONTRIBUTING.md) before opening an issue or PR.
+| Feature | Twofold | dartz / fpdart |
+|---|---|---|
+| Learning curve | Low — plain Dart | Medium–High — FP concepts |
+| API surface | Small, focused | Large, general-purpose |
+| Async support | Built-in | Varies |
+| Testing helpers | ✅ Included | ❌ Not included |
+| Target audience | App developers | FP-oriented developers |
+
+> **Twofold is not a replacement for full FP libraries.** If you need `Option`,  
+> `IO`, `Task`, or HKTs, dartz or fpdart are the right tools. Twofold solves  
+> one thing well: success-or-error branching.
+
+---
+
+## Who is this for?
+
+- Flutter and Dart developers who want **explicit error handling** without exceptions
+- Teams that find `Either` from FP libraries too abstract
+- Anyone who wants a `Result` type that is easy to read and review
 
 ---
 
 ## Installation
-
 ```yaml
 dependencies:
-  twofold: ^0.2.0
+  twofold: ^0.2.1
 ```
-
 ```dart
 import 'package:twofold/twofold.dart';
 ```
 
 ---
 
-## Basic Usage
+## Core Concepts
 
-### Creating values
+A `Twofold<S, E>` always holds **exactly one** of:
 
+- `Success(value)` — the operation worked, here's the result
+- `Error(error)` — the operation failed, here's why
+
+---
+
+## Usage
+
+### Create values
 ```dart
 final Twofold<int, String> success = Twofold.success(42);
-final Twofold<int, String> error = Twofold.error('Something went wrong');
+final Twofold<int, String> error   = Twofold.error('Something went wrong');
 ```
 
----
-
-### Checking state
-
-```dart
-if (result.isSuccess) {
-  print('Operation succeeded');
-}
-
-if (result.isError) {
-  print('Operation failed');
-}
-```
-
----
-
-### Handling both cases (recommended)
-
+### Handle both cases
 ```dart
 final message = result.when(
-  onSuccess: (value) => 'Success: $value',
-  onError: (error) => 'Failed: $error',
+  onSuccess: (value) => 'Got: $value',
+  onError:   (error) => 'Failed: $error',
 );
 ```
 
----
-
-### Side effects
-
+### Check state
 ```dart
-result.when(
-  onSuccess: (value) => save(value),
-  onError: (error) => log(error),
-);
+if (result.isSuccess) { ... }
+if (result.isError)   { ... }
 ```
 
----
-
-## Transforming values
-
-### mapSuccess
-
-```dart
-final doubled = Twofold.success(2)
-    .mapSuccess((v) => v * 2);
-```
-
----
-
-### mapError
-
-```dart
-final formattedError = Twofold.error(404)
-    .mapError((code) => 'Error $code');
-```
-
----
-
-### flatMapSuccess (chaining)
-
-```dart
-Twofold<int, String> parse(String value) {
-  final parsed = int.tryParse(value);
-  return parsed != null
-      ? Twofold.success(parsed)
-      : Twofold.error('Invalid number');
-}
-
-final result = Twofold.success('10')
-    .flatMapSuccess(parse);
-```
-
----
-
-## Fallback values
-
+### Fallback values
 ```dart
 final value = result.getOrElse(0);
-```
-
-```dart
 final value = result.getOrElseGet(() => expensiveFallback());
 ```
 
 ---
 
-## Async Usage
+## Transforming Values
 
-Twofold provides extensions and helpers for `Future<Twofold>` to enable
-clear and fluent async flows without deeply nested `try/catch` blocks.
-
+### mapSuccess
 ```dart
+final doubled = Twofold.success(2).mapSuccess((v) => v * 2);
+```
+
+### mapError
+```dart
+final labeled = Twofold.error(404).mapError((code) => 'Error $code');
+```
+
+### flatMapSuccess — chain dependent operations
+```dart
+Twofold<int, String> parse(String input) {
+  final n = int.tryParse(input);
+  return n != null ? Twofold.success(n) : Twofold.error('Not a number');
+}
+
+final result = Twofold.success('10').flatMapSuccess(parse);
+```
+
+---
+
+## Async Usage
+```dart
+// Wrap any async call safely
+final result = await TwofoldFuture.tryCatch(
+  () async => fetchData(),
+  onError: (e, _) => e.toString(),
+);
+
+// Chain async operations fluently
 fetchUser()
   .mapSuccess((u) => u.name)
   .flatMapSuccess(fetchProfile)
   .when(
     onSuccess: print,
-    onError: showError,
+    onError:   showError,
   );
-```
-
-Creating async results safely:
-
-```dart
-final result = await TwofoldFuture.tryCatch(
-  () async => fetchData(),
-  onError: (e, _) => e.toString(),
-);
 ```
 
 ---
 
 ## Testing Helpers
 
-Twofold includes **framework-agnostic testing helpers** to make assertions
-clear and intention-revealing.
-
+Twofold ships with framework-agnostic helpers that work with `package:test`  
+and `flutter_test`:
 ```dart
 expectSuccess(result, (value) {
   expect(value, 42);
@@ -193,38 +168,33 @@ expectError(result, (error) {
 });
 ```
 
-These helpers work with:
-- `package:test`
-- `flutter_test`
-- any assertion-based testing setup
-
 ---
 
-## Examples (Recommended)
+## Examples
 
-This package includes a **dedicated `example/` project** with
-well-documented, runnable code covering **every API**.
+The `example/` directory contains runnable, documented code covering every API:
 
-The example project demonstrates:
-- core construction and inspection
+- Construction and inspection
 - `when` handling patterns
-- transformations and chaining
-- async factories vs async transforms
-- fallback utilities
-- testing helpers with real tests
+- Transformations and chaining
+- Async factories and transforms
+- Fallback utilities
+- Testing helpers with real tests
 
-📂 See: **[`example/`](./example)**  
-📄 Start here: **[`example/README.md`](./example/README.md)**
+📂 [`example/`](./example) — Start with [`example/README.md`](./example/README.md)
 
 ---
 
-## Important Note
+## Design Goals
 
-A `Twofold` always represents **exactly one state**:
-- a `Success` containing a value
-- or an `Error` containing an error
+Twofold is intentionally small and strict:
 
-Invalid or ambiguous states are not possible by design.
+- **Simple** — one concept, one job
+- **Explicit** — no hidden control flow
+- **Readable** — application code stays clear
+- **Stable** — predictable API evolution toward v1.0
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) before opening issues or PRs.
 
 ---
 
@@ -232,4 +202,4 @@ Invalid or ambiguous states are not possible by design.
 
 - GitHub: https://github.com/wing-works/twofold
 - Issues and feature discussions are welcome
-- Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before contributing
+- Please read [CONTRIBUTING.md](./CONTRIBUTING.md) first
