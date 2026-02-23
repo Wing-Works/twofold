@@ -7,12 +7,13 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.3.0]
+## [0.2.1]
 
 ### Added
 
 - `Twofold.fromCondition` factory for creating a `Twofold` from a boolean condition.
 - `Twofold.tryCatch` factory for safely executing code that may throw an exception.
+- Added dependencies on `meta`, `async`, and `collection` packages.
 
 ### Changed
 
@@ -20,8 +21,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Improved
 
+- Improved API documentation for core features, covering `when`, `tryCatch` (with a new security note), `successOrNull`, `errorOrNull`, nullable types, and pattern matching.
 - Enhanced equality and `hashCode` implementations for `Success` and `Error` classes.
-- Marked `Success` and `Error` classes as `final` to enforce immutability.
+- Marked `Success` and `Error` classes as `final` and `@immutable` to enforce immutability.
+- Added `@isTest` annotation to `expectSuccess` test helper.
 
 ---
 
